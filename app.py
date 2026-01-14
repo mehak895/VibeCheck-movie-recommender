@@ -41,11 +41,11 @@ def load_collaborative_recommender():
         ratings_path="data/ratings.csv"
     )
 
-@st.cache_resource
 def load_sentiment_analyzer():
     return SentimentAnalyzer(
         reviews_path="data/reviews.csv"
     )
+
 
 content_recommender = load_content_recommender()
 collab_recommender = load_collaborative_recommender()

@@ -1,27 +1,33 @@
 import pandas as pd
+import nltk
+import os
 from nltk.sentiment import SentimentIntensityAnalyzer
+
+
+def _ensure_vader():
+    try:
+        nltk.data.find("sentiment/vader_lexicon.zip")
+    except LookupError:
+        nltk.download("vader_lexicon", quiet=True)
 
 
 class SentimentAnalyzer:
     def __init__(self, reviews_path):
+        _ensure_vader()
         self.reviews = pd.read_csv(reviews_path)
         self.analyzer = SentimentIntensityAnalyzer()
-        self.movie_sentiment = self._compute_movie_sentiment()
-
-    def _compute_movie_sentiment(self):
-        # Compute sentiment score per review
-        self.reviews["sentiment"] = self.reviews["review_text"].apply(
-            lambda x: self.analyzer.polarity_scores(str(x))["compound"]
-        )
-
-        # Aggregate sentiment per movie
-        movie_sentiment = (
-            self.reviews.groupby("movieId")["sentiment"]
-            .mean()
-            .to_dict()
-        )
-        return movie_sentiment
 
     def get_sentiment_score(self, movie_id):
-        # Neutral fallback for missing reviews
-        return self.movie_sentiment.get(movie_id, 0.0)
+        movie_reviews = self.reviews[
+            self.reviews["movieId"] == movie_id
+        ]
+
+        if movie_reviews.empty:
+            return 0.0
+
+        scores = [
+            self.analyzer.polarity_scores(text)["compound"]
+            for text in movie_reviews["review_text"]
+        ]
+
+        return sum(scores) / len(scores)
