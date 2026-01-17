@@ -4,6 +4,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class ContentBasedRecommender:
+    """
+    Backend module responsible for content-based candidate generation.
+    """
+
     def __init__(self, movies_path, tags_path):
         self.movies = pd.read_csv(movies_path)
         self.tags = pd.read_csv(tags_path)
@@ -12,6 +16,9 @@ class ContentBasedRecommender:
         self._build_similarity_matrix()
 
     def _prepare_features(self):
+        """
+        Combines genres and user-generated tags into a single textual feature.
+        """
         tags_grouped = (
             self.tags.groupby("movieId")["tag"]
             .apply(lambda x: " ".join(x))
@@ -21,6 +28,7 @@ class ContentBasedRecommender:
         self.movies = self.movies.merge(
             tags_grouped, on="movieId", how="left"
         )
+
         self.movies["tag"] = self.movies["tag"].fillna("")
 
         self.movies["content"] = (
@@ -30,11 +38,26 @@ class ContentBasedRecommender:
         )
 
     def _build_similarity_matrix(self):
+        """
+        Builds a cosine similarity matrix over movie content features.
+        """
         vectorizer = CountVectorizer(stop_words="english")
         count_matrix = vectorizer.fit_transform(self.movies["content"])
         self.similarity = cosine_similarity(count_matrix)
 
-    def recommend(self, movie_title, top_n=10):
+    def generate_candidates(self, movie_title, top_n=20):
+        """
+        Generates a candidate set of movies similar to the given movie.
+
+        Returns:
+            List of dicts: [
+                {
+                    "movieId": int,
+                    "title": str,
+                    "similarity_score": float
+                }
+            ]
+        """
         if movie_title not in self.movies["title"].values:
             return []
 
@@ -45,6 +68,17 @@ class ContentBasedRecommender:
             similarity_scores, key=lambda x: x[1], reverse=True
         )
 
-        top_movies = similarity_scores[1 : top_n + 1]
+        candidates = similarity_scores[1 : top_n + 1]
 
-        return [self.movies.iloc[i[0]]["title"] for i in top_movies]
+        results = []
+        for i, score in candidates:
+            row = self.movies.iloc[i]
+            results.append(
+                {
+                    "movieId": int(row["movieId"]),
+                    "title": row["title"],
+                    "similarity_score": float(score),
+                }
+            )
+
+        return results

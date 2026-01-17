@@ -1,17 +1,10 @@
-# Python
+# Virtual environments
+venv/
+venv310/
+
+# Python cache
 __pycache__/
 *.pyc
 
-# Virtual environment
-venv/
-venv310/
-.env
-
 # OS files
 .DS_Store
-
-# Streamlit
-.streamlit/
-
-# Temporary files
-data/train_ratings.csv
