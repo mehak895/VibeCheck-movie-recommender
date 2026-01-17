@@ -1,63 +1,41 @@
-# CineSense – Movie Recommendation System
+# VibeCheck – Movie Recommendation System
 
-CineSense is a content-based movie recommendation system that suggests movies similar to a selected title based on metadata such as genre, keywords, and overview.  
-The project is structured using a **3-layer design** to keep logic clean, maintainable, and easy to extend.
+VibeCheck is a backend-focused hybrid movie recommendation system that combines  
+**content similarity**, **user behavior**, and **review sentiment** to rank movies more effectively.
 
----
-
-## How the Recommendation Works
-
-1. Movie metadata (genres, keywords, overview, cast) is combined into a single feature set  
-2. Text data is vectorized using TF-IDF  
-3. Cosine similarity is used to find movies most similar to the selected one  
-4. Top matching movies are returned as recommendations  
-
-The approach is **explainable** and easy to debug compared to black-box models.
+The system is designed to demonstrate how sentiment analysis can improve the quality
+of traditional recommendation pipelines.
 
 ---
 
-## 3-Layer Project Structure (Important)
+## Features
 
-The project is intentionally divided into three layers:
-
-### 1️⃣ Data Layer
-- Loads and preprocesses the movie dataset  
-- Cleans missing values and prepares features  
-- Responsible only for data handling  
-
-### 2️⃣ Recommendation / Logic Layer
-- Builds the similarity model  
-- Computes similarity scores  
-- Contains all recommendation logic  
-- Independent of UI or presentation  
-
-### 3️⃣ Presentation Layer
-- Streamlit-based UI  
-- Takes user input (movie selection)  
-- Displays recommended movies  
-- Does not contain business logic  
-
-This separation ensures:
-- Logic can be reused without the UI  
-- UI changes do not affect recommendation logic  
-- Easier debugging and future extensions  
+- Content-based recommendations using movie genres and user-generated tags  
+- Collaborative filtering using matrix factorization (SVD) on user ratings  
+- Sentiment-aware ranking using review text (VADER sentiment analysis)  
+- Cold-start handling for new users with no rating history  
+- Offline evaluation to compare recommendations **with and without sentiment**
 
 ---
 
 ## Tech Stack
 
-- **Language:** Python  
-- **Libraries:** pandas, numpy, scikit-learn  
-- **Recommendation:** TF-IDF, Cosine Similarity  
-- **UI:** Streamlit  
+- Python  
+- Pandas, NumPy  
+- Scikit-learn (CountVectorizer, TruncatedSVD)  
+- NLTK (VADER Sentiment Analyzer)
 
 ---
 
-## How to Run the Project
+## Dataset
+
+- MovieLens (movies, ratings, tags)  
+- Custom review dataset for sentiment analysis
+
+---
+
+## How to Run (Backend)
 
 ```bash
-git clone https://github.com/mehak895/cinesense-movie-recommender.git
-cd cinesense-movie-recommender
 pip install -r requirements.txt
-streamlit run app.py
-
+python run_backend.py
