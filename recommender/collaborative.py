@@ -13,13 +13,9 @@ class CollaborativeRecommender:
         self.ratings = pd.read_csv(ratings_path)
         self._prepare_interaction_matrix()
         self._train_factor_model()
+        self._compute_movie_popularity()  # NEW
 
     def _prepare_interaction_matrix(self):
-        """
-        Builds the user–movie interaction matrix.
-        Rows: users
-        Columns: movies
-        """
         self.user_movie_matrix = self.ratings.pivot(
             index="userId",
             columns="movieId",
@@ -27,25 +23,24 @@ class CollaborativeRecommender:
         ).fillna(0)
 
     def _train_factor_model(self):
-        """
-        Learns latent user and movie factors using SVD.
-        """
         self.svd = TruncatedSVD(n_components=20, random_state=42)
         self.user_factors = self.svd.fit_transform(self.user_movie_matrix)
         self.movie_factors = self.svd.components_
 
+    def _compute_movie_popularity(self):
+        """
+        Computes popularity score using average rating and number of ratings.
+        """
+        self.movie_popularity = (
+            self.ratings.groupby("movieId")["rating"]
+            .agg(["mean", "count"])
+            .reset_index()
+        )
+
     def has_user_history(self, user_id):
-        """
-        Checks whether the user exists in historical data.
-        Used for cold-start detection.
-        """
         return user_id in self.user_movie_matrix.index
 
     def get_affinity_score(self, user_id, movie_id):
-        """
-        Returns a predicted affinity score between a user and a movie.
-        This is NOT a final recommendation score.
-        """
         if user_id not in self.user_movie_matrix.index:
             return 0.0
         if movie_id not in self.user_movie_matrix.columns:
@@ -60,3 +55,19 @@ class CollaborativeRecommender:
                 self.movie_factors[:, movie_idx]
             )
         )
+
+    def get_popularity_score(self, movie_id):
+        """
+        Returns popularity score (quality + confidence).
+        """
+        row = self.movie_popularity[
+            self.movie_popularity["movieId"] == movie_id
+        ]
+
+        if row.empty:
+            return 0.0
+
+        mean_rating = row["mean"].values[0]
+        count = row["count"].values[0]
+
+        return float(mean_rating * np.log1p(count))

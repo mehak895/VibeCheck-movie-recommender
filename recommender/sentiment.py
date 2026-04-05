@@ -1,52 +1,28 @@
-import pandas as pd
-import nltk
-from nltk.sentiment import SentimentIntensityAnalyzer
-
-
-def _ensure_vader():
-    try:
-        nltk.data.find("sentiment/vader_lexicon.zip")
-    except LookupError:
-        nltk.download("vader_lexicon", quiet=True)
+import pickle
 
 
 class SentimentAnalyzer:
-    def __init__(self, reviews_path):
-        _ensure_vader()
+    def __init__(self):
+        # Load trained model + vectorizer
+        with open("models/sentiment_model.pkl", "rb") as f:
+            self.model = pickle.load(f)
 
-        self.reviews = pd.read_csv(reviews_path)
-        self.analyzer = SentimentIntensityAnalyzer()
+        with open("models/vectorizer.pkl", "rb") as f:
+            self.vectorizer = pickle.load(f)
 
-        # Global sentiment prior (used when no movie reviews exist)
-        self.global_mean_sentiment = self._compute_global_mean_sentiment()
-
-    def _compute_global_mean_sentiment(self):
+    def get_sentiment_score(self, text):
         """
-        Computes average sentiment across all reviews.
-        Acts as a weak prior when movie-level data is missing.
+        Predict sentiment from text (movie content)
         """
-        if self.reviews.empty:
-            return 0.1  # weak positive prior
 
-        scores = [
-            self.analyzer.polarity_scores(text)["compound"]
-            for text in self.reviews["review_text"]
-        ]
+        if not text:
+            return 0.0
 
-        return sum(scores) / len(scores)
+        X = self.vectorizer.transform([text])
+        prob = self.model.predict_proba(X)[0][1]  # positive prob
 
-    def get_sentiment_score(self, movie_id):
-        movie_reviews = self.reviews[
-            self.reviews["movieId"] == movie_id
-        ]
+        # Convert [0,1] → [-1,1]
+        score = (prob * 2) - 1
+        score = score ** 3
 
-        # Use global prior if no reviews exist
-        if movie_reviews.empty:
-            return self.global_mean_sentiment
-
-        scores = [
-            self.analyzer.polarity_scores(text)["compound"]
-            for text in movie_reviews["review_text"]
-        ]
-
-        return sum(scores) / len(scores)
+        return float(score)

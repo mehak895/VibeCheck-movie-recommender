@@ -48,21 +48,21 @@ class ContentBasedRecommender:
     def generate_candidates(self, movie_title, top_n=20):
         """
         Generates a candidate set of movies similar to the given movie.
-
-        Returns:
-            List of dicts: [
-                {
-                    "movieId": int,
-                    "title": str,
-                    "similarity_score": float
-                }
-            ]
         """
-        if movie_title not in self.movies["title"].values:
+
+        # 🔥 Flexible search (partial + case insensitive)
+        matches = self.movies[
+            self.movies["title"].str.lower().str.contains(movie_title.lower())
+        ]
+
+        # ❌ No match
+        if matches.empty:
             return []
 
-        idx = self.movies[self.movies["title"] == movie_title].index[0]
+        # ✅ Pick first best match
+        idx = matches.index[0]
 
+        # Compute similarity
         similarity_scores = list(enumerate(self.similarity[idx]))
         similarity_scores = sorted(
             similarity_scores, key=lambda x: x[1], reverse=True
