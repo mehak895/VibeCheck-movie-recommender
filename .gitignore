@@ -8,3 +8,6 @@ __pycache__/
 
 # OS files
 .DS_Store
+
+data/IMDB Dataset.csv
+models/
