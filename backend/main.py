@@ -15,8 +15,12 @@ app.add_middleware(
 )
 
 # Load models once (important)
-content = ContentBasedRecommender("data/movies.csv", "data/tags.csv")
-cf = CollaborativeRecommender("data/ratings.csv")
+content = ContentBasedRecommender(
+    "data/movies_small.csv",
+    "data/tags.csv"
+)
+
+cf = CollaborativeRecommender("data/ratings_small.csv")
 sentiment = SentimentAnalyzer()
 
 engine = RecommendationEngine(content, cf, sentiment)

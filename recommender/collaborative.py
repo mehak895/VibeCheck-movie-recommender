@@ -23,7 +23,7 @@ class CollaborativeRecommender:
         ).fillna(0)
 
     def _train_factor_model(self):
-        self.svd = TruncatedSVD(n_components=20, random_state=42)
+        self.svd = TruncatedSVD(n_components=10, random_state=42)
         self.user_factors = self.svd.fit_transform(self.user_movie_matrix)
         self.movie_factors = self.svd.components_
 

@@ -43,7 +43,7 @@ class ContentBasedRecommender:
         """
         vectorizer = CountVectorizer(stop_words="english")
         count_matrix = vectorizer.fit_transform(self.movies["content"])
-        self.similarity = cosine_similarity(count_matrix)
+        self.similarity = cosine_similarity(count_matrix).astype("float32")
 
     def generate_candidates(self, movie_title, top_n=20):
         """
