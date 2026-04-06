@@ -3,27 +3,33 @@ from recommender.content_based import ContentBasedRecommender
 from recommender.collaborative import CollaborativeRecommender
 from recommender.sentiment import SentimentAnalyzer
 from recommender.engine import RecommendationEngine
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # allow all (for now)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Load models once (important)
-content = ContentBasedRecommender(
-    "data/movies_small.csv",
-    "data/tags.csv"
-)
+# 🚀 Lazy load (initially None)
+engine = None
 
-cf = CollaborativeRecommender("data/ratings_small.csv")
-sentiment = SentimentAnalyzer()
 
-engine = RecommendationEngine(content, cf, sentiment)
+def get_engine():
+    global engine
+
+    if engine is None:
+        print("🔥 Loading models...")
+
+        content = ContentBasedRecommender(
+            "data/movies_small.csv",
+            "data/tags.csv"
+        )
+
+        cf = CollaborativeRecommender(
+            "data/ratings_small.csv"
+        )
+
+        sentiment = SentimentAnalyzer()
+
+        engine = RecommendationEngine(content, cf, sentiment)
+
+    return engine
 
 
 @app.get("/")
@@ -32,10 +38,9 @@ def home():
 
 
 @app.get("/recommend")
-def recommend(movie: str, user_id: int = 1):
-    results = engine.recommend(
-        user_id=user_id,
-        movie_title=movie,
-        top_k=10
-    )
+def recommend(movie: str, user_id: int = 3):
+    eng = get_engine()  # 🔥 load here
+
+    results = eng.recommend(user_id, movie)
+
     return results
