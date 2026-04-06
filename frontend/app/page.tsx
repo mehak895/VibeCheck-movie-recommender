@@ -18,9 +18,20 @@ export default function Home() {
       );
 
       const data = await res.json();
+
+      // ✅ SAFE HANDLING (prevents crash)
+      if (!Array.isArray(data)) {
+        console.log("Unexpected response:", data);
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
       setResults(data);
+
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error:", err);
+      setResults([]);
     }
 
     setLoading(false);
@@ -67,6 +78,13 @@ export default function Home() {
       {loading && (
         <p className="text-center text-lg animate-pulse mb-6">
           Fetching recommendations...
+        </p>
+      )}
+
+      {/* EMPTY STATE */}
+      {!loading && results.length === 0 && (
+        <p className="text-center text-gray-400 mb-6">
+          No recommendations yet. Try searching a movie like "Titanic" or "Toy Story".
         </p>
       )}
 

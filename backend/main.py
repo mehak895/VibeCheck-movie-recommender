@@ -10,16 +10,15 @@ import os
 
 app = FastAPI()
 
-# ✅ CORS FIX (VERY IMPORTANT)
+# ✅ FIX CORS (IMPORTANT)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for hackathon/demo (later restrict to Vercel URL)
+    allow_origins=["*"],  # allow all for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 🚀 Lazy load
 engine = None
 
 
@@ -66,11 +65,12 @@ def recommend(movie: str, user_id: int = 3):
 
         results = eng.recommend(user_id, movie)
 
+        # ✅ ALWAYS RETURN ARRAY (IMPORTANT FIX)
         if not results:
-            return {"message": "No recommendations found"}
+            return []
 
         return results
 
     except Exception as e:
         print("❌ ERROR in /recommend:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        return []  # NEVER crash frontend
