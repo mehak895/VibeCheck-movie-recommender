@@ -1,5 +1,3 @@
-df = pd.read_csv("data/ratings.csv").head(20000)
-df.to_csv("data/ratings_small.csv", index=False)
 userId,movieId,rating,timestamp
 1,1,4.0,964982703
 1,3,4.0,964981247
