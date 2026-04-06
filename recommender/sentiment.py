@@ -1,26 +1,40 @@
 import pickle
+import os
 
 
 class SentimentAnalyzer:
     def __init__(self):
-        # Load trained model
-        with open("models/sentiment_model.pkl", "rb") as f:
-            self.model = pickle.load(f)
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-        with open("models/vectorizer.pkl", "rb") as f:
-            self.vectorizer = pickle.load(f)
+        model_path = os.path.join(BASE_DIR, "../models/sentiment_model.pkl")
+        vectorizer_path = os.path.join(BASE_DIR, "../models/vectorizer.pkl")
 
-    def _predict_sentiment(self, texts):
-        if not texts:
-            return [0.0]
+        try:
+            with open(model_path, "rb") as f:
+                self.model = pickle.load(f)
 
-        X = self.vectorizer.transform(texts)
-        probs = self.model.predict_proba(X)[:, 1]
+            with open(vectorizer_path, "rb") as f:
+                self.vectorizer = pickle.load(f)
 
-        # Convert [0,1] → [-1,1]
-        scores = (probs * 2) - 1
-        return scores
+            print("✅ Sentiment model loaded")
 
-    def get_sentiment_score(self, text):
-        scores = self._predict_sentiment([text])
-        return float(scores[0])
+        except Exception as e:
+            print("❌ Error loading sentiment model:", str(e))
+            self.model = None
+            self.vectorizer = None
+
+    def predict(self, text):
+        """
+        Returns sentiment score between 0 and 1
+        """
+        if self.model is None or self.vectorizer is None:
+            return 0.5  # fallback neutral
+
+        try:
+            vec = self.vectorizer.transform([text])
+            prob = self.model.predict_proba(vec)[0][1]
+            return float(prob)
+
+        except Exception as e:
+            print("❌ Sentiment prediction error:", str(e))
+            return 0.5

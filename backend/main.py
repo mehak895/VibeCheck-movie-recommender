@@ -1,12 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from recommender.content_based import ContentBasedRecommender
 from recommender.collaborative import CollaborativeRecommender
 from recommender.sentiment import SentimentAnalyzer
 from recommender.engine import RecommendationEngine
+import os
 
 app = FastAPI()
 
-# 🚀 Lazy load (initially None)
+# 🚀 Lazy load
 engine = None
 
 
@@ -14,20 +15,29 @@ def get_engine():
     global engine
 
     if engine is None:
-        print("🔥 Loading models...")
+        try:
+            print("🔥 Loading models...")
 
-        content = ContentBasedRecommender(
-            "data/movies_small.csv",
-            "data/tags.csv"
-        )
+            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-        cf = CollaborativeRecommender(
-            "data/ratings_small.csv"
-        )
+            content = ContentBasedRecommender(
+                os.path.join(BASE_DIR, "../data/movies_small.csv"),
+                os.path.join(BASE_DIR, "../data/tags.csv")
+            )
 
-        sentiment = SentimentAnalyzer()
+            cf = CollaborativeRecommender(
+                os.path.join(BASE_DIR, "../data/ratings_small.csv")
+            )
 
-        engine = RecommendationEngine(content, cf, sentiment)
+            sentiment = SentimentAnalyzer()
+
+            engine = RecommendationEngine(content, cf, sentiment)
+
+            print("✅ Models loaded successfully")
+
+        except Exception as e:
+            print("❌ ERROR while loading engine:", str(e))
+            raise e
 
     return engine
 
@@ -39,8 +49,16 @@ def home():
 
 @app.get("/recommend")
 def recommend(movie: str, user_id: int = 3):
-    eng = get_engine()  # 🔥 load here
+    try:
+        eng = get_engine()
 
-    results = eng.recommend(user_id, movie)
+        results = eng.recommend(user_id, movie)
 
-    return results
+        if not results:
+            return {"message": "No recommendations found"}
+
+        return results
+
+    except Exception as e:
+        print("❌ ERROR in /recommend:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
