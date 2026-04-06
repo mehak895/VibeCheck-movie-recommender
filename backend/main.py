@@ -1,11 +1,23 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
 from recommender.content_based import ContentBasedRecommender
 from recommender.collaborative import CollaborativeRecommender
 from recommender.sentiment import SentimentAnalyzer
 from recommender.engine import RecommendationEngine
+
 import os
 
 app = FastAPI()
+
+# ✅ CORS FIX (VERY IMPORTANT)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # for hackathon/demo (later restrict to Vercel URL)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 🚀 Lazy load
 engine = None
