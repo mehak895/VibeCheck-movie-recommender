@@ -3,3 +3,5 @@ pandas
 numpy<2
 scikit-learn
 nltk
+uvicorn
+fastapi
